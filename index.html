@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nucleus Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#161616;--l1:#262626;--l2:#393939;--l3:#525252;
+  --lh1:#2d2d2d;--lh2:#474747;--ls1:#353535;--la1:#393939;
+  --bs0:#393939;--bs1:#474747;--bst:#6f6f6f;
+  --tp:#f4f4f4;--ts:#a8a8a8;--tph:#6f6f6f;--td:#525252;
+  --ip:#0f62fe;--ih:#0353e9;--io:#78a9ff;--lp:#78a9ff;
+  --se:#ff8389;--sw:#f1c21b;--ss:#42be65;
+  --swb:#2b2000;--shadow:0 2px 6px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--tp);font:400 14px/1.29 'IBM Plex Sans',sans-serif;display:flex;overflow:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--l3)}
+.nav{width:256px;background:var(--l1);border-right:1px solid var(--bs0);display:flex;flex-direction:column;height:100vh;flex-shrink:0}
+.nav-head{display:flex;align-items:center;gap:8px;padding:16px;height:48px;border-bottom:1px solid var(--bs0);flex-shrink:0}
+.nav-logo{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.nav-name{font:600 14px 'IBM Plex Sans';color:var(--tp)}
+.nav-name em{font-style:normal;font-weight:400;color:var(--ts)}
+.nav-items{flex:1;padding:4px 0;overflow-y:auto}
+.nav-section{font:400 12px 'IBM Plex Sans';color:var(--tph);letter-spacing:.32px;text-transform:uppercase;padding:16px 16px 4px}
+.nav-link{display:flex;align-items:center;gap:12px;width:100%;height:32px;padding:0 16px;border:none;border-left:2px solid transparent;background:transparent;color:var(--ts);font:400 14px 'IBM Plex Sans';cursor:pointer;text-align:left;transition:background .1s,color .1s}
+.nav-link:hover{background:rgba(141,141,141,.12);color:var(--tp)}
+.nav-link.active{background:rgba(120,169,255,.08);color:var(--tp);border-left-color:var(--io);font-weight:600}
+.nav-icon{width:16px;height:16px;flex-shrink:0;fill:currentColor;color:var(--ts)}
+.nav-link.active .nav-icon{color:var(--tp)}
+.nav-link-text{flex:1}
+.nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;background:var(--l2);color:var(--ts);font:600 11px 'IBM Plex Mono',monospace;flex-shrink:0}
+.tag{display:inline-flex;align-items:center;height:24px;padding:0 8px;font:500 12px 'IBM Plex Sans';white-space:nowrap;letter-spacing:.16px}
+.tag-blue{background:#003a6d;color:#a6c8ff}.tag-green{background:#022d0d;color:#6fdc8c}
+.tag-red{background:#3b0f12;color:#ffd7d9}.tag-yellow{background:#302400;color:#f8d460}
+.tag-gray{background:#393939;color:#c6c6c6}.tag-purple{background:#250e3f;color:#d4bbff}
+.tag-teal{background:#004548;color:#9ef0f0}
+.nav-footer{padding:12px 16px;border-top:1px solid var(--bs0);display:flex;align-items:center;gap:8px}
+.avatar{width:32px;height:32px;background:var(--ip);display:flex;align-items:center;justify-content:center;font:600 12px 'IBM Plex Sans';color:#fff;flex-shrink:0}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;height:100vh}
+.statusbar{display:flex;align-items:center;height:40px;background:#1a1a1a;border-bottom:1px solid var(--bs0);flex-shrink:0;overflow:hidden}
+.sb-label{font:400 12px 'IBM Plex Sans';color:var(--tph);text-transform:uppercase;letter-spacing:.32px;padding:0 16px;white-space:nowrap;flex-shrink:0}
+.sb-item{display:flex;align-items:center;gap:5px;padding:0 12px;height:100%;border-left:1px solid var(--bs0);font:500 11px 'IBM Plex Sans';color:var(--ts);white-space:nowrap;flex-shrink:0}
+.sb-item.warn{background:rgba(241,194,27,.06);border-left:1px solid rgba(241,194,27,.3);color:var(--sw)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-pulse{animation:dotPulse 2s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sb-warning{margin-left:auto;display:flex;align-items:center;gap:4px;color:var(--sw);background:var(--swb);padding:4px 12px;border-left:2px solid var(--sw);font:500 12px 'IBM Plex Sans';white-space:nowrap;flex-shrink:0;animation:warnPulse 3s ease-in-out infinite}
+@keyframes warnPulse{0%,100%{background:var(--swb)}50%{background:rgba(241,194,27,.12)}}
+.sb-time{padding:0 16px;font:400 11px 'IBM Plex Mono',monospace;color:var(--tph);white-space:nowrap;flex-shrink:0}
+.header{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 16px;background:var(--l1);border-bottom:1px solid var(--bs0);flex-shrink:0}
+.header-info h1{font:600 14px 'IBM Plex Sans';color:var(--tp)}
+.header-info p{font:400 12px 'IBM Plex Sans';color:var(--ts);margin-top:1px}
+.header-actions{display:flex;align-items:center;gap:8px}
+.search{display:flex;align-items:center;gap:8px;background:var(--l2);border:none;border-bottom:1px solid var(--bst);padding:0 12px;height:32px;width:200px;font:400 14px 'IBM Plex Sans';color:var(--tph)}
+.hbtn{width:32px;height:32px;background:transparent;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ts);position:relative;transition:background .1s}
+.hbtn:hover{background:var(--lh1)}
+.notif-dot{position:absolute;top:6px;right:6px;width:6px;height:6px;background:var(--se);border-radius:50%;border:1.5px solid var(--l1)}
+.overflow{position:relative}
+.overflow-trigger{display:flex;align-items:center;gap:4px;padding:0 8px;height:32px;background:var(--l2);border:1px solid var(--bs1);cursor:pointer;font:400 14px 'IBM Plex Sans';color:var(--ts);transition:background .1s}
+.overflow-trigger:hover{background:var(--lh2)}
+.overflow-panel{display:none;position:absolute;right:0;top:calc(100% + 2px);width:160px;background:var(--l2);border:1px solid var(--bs1);box-shadow:var(--shadow);z-index:9999}
+.overflow-panel.open{display:block}
+.overflow-opt{padding:8px 16px;font:400 14px 'IBM Plex Sans';color:var(--ts);cursor:pointer;border-left:2px solid transparent}
+.overflow-opt:hover{background:var(--lh2);color:var(--tp)}
+.overflow-opt.danger{color:var(--se)}
+.overflow-div{height:1px;background:var(--bs0)}
+.content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.page{display:flex;flex-direction:column;gap:16px}
+.hidden{display:none!important}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bs0);border:1px solid var(--bs0)}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bs0);border:1px solid var(--bs0)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bs0);border:1px solid var(--bs0)}
+.gchart{display:grid;grid-template-columns:1fr 280px;gap:1px;background:var(--bs0);border:1px solid var(--bs0)}
+.tile{background:var(--l1);padding:16px;position:relative;overflow:hidden}
+.tile-hero{background:#1e2a3a!important;border-left:3px solid var(--io)!important}
+.tile-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(120,169,255,.04),transparent 60%);pointer-events:none}
+.eyebrow{font:400 12px 'IBM Plex Sans';color:var(--ts);text-transform:uppercase;letter-spacing:.32px;margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile-hero .eyebrow{color:var(--io);font-weight:600}
+.metric{font:300 32px 'IBM Plex Sans';color:var(--tp);margin-bottom:4px}
+.tile-hero .metric{font-size:48px;font-weight:200;letter-spacing:-1px}
+.delta{font:500 12px 'IBM Plex Sans';display:flex;align-items:center;gap:4px;margin-bottom:8px}
+.detail{font:400 12px 'IBM Plex Sans';color:var(--ts);border-top:1px solid var(--bs0);padding-top:8px;margin-top:8px}
+.sparkline{position:absolute;bottom:0;right:0;width:80px;height:44px;opacity:.65;pointer-events:none}
+.tile-hero .sparkline{width:110px;height:54px;opacity:.5}
+.chart-tile{background:var(--l1);padding:16px 16px 12px}
+.chart-title{font:600 14px 'IBM Plex Sans';color:var(--tp);letter-spacing:.16px}
+.chart-sub{font:400 12px 'IBM Plex Sans';color:var(--ts);margin-top:2px}
+.chart-legend{display:flex;gap:16px;margin:12px 0;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:4px;font:400 12px 'IBM Plex Sans';color:var(--ts)}
+.legend-sw{width:12px;height:4px;flex-shrink:0}
+.table-wrap{background:var(--l1)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 16px;border-bottom:1px solid var(--bs0)}
+.toolbar-title{font:600 14px 'IBM Plex Sans';color:var(--tp)}
+.toolbar-sub{font:400 12px 'IBM Plex Sans';color:var(--ts)}
+.toolbar-actions{display:flex;align-items:center;gap:1px}
+.btn{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border:none;font:400 14px 'IBM Plex Sans';cursor:pointer;transition:background .1s;white-space:nowrap}
+.btn-ghost{background:transparent;color:var(--ts);border:1px solid transparent}
+.btn-ghost:hover{background:var(--lh1);color:var(--tp)}
+.btn-ghost.active{background:var(--ls1);color:var(--tp);border-bottom:2px solid var(--io)}
+.btn-outline{background:transparent;color:var(--io);border:1px solid var(--io)}
+.btn-outline:hover{background:rgba(120,169,255,.1)}
+.btn-primary{background:var(--ip);color:#fff}
+.btn-primary:hover{background:var(--ih)}
+.dt{width:100%;border-collapse:collapse}
+.dt thead tr{background:var(--la1);height:40px}
+.dt th{padding:0 16px;text-align:left;font:600 14px 'IBM Plex Sans';color:var(--tp);white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid var(--bs1);letter-spacing:.16px}
+.dt th:hover{background:var(--lh1)}
+.dt th.sorted{color:var(--lp)}
+.sort-icon{margin-left:4px;opacity:.4;font-style:normal}
+.dt th.sorted .sort-icon{opacity:1;color:var(--lp)}
+.dt tbody tr{background:var(--l1);height:48px;border-bottom:1px solid var(--bs0);transition:background .1s}
+.dt tbody tr:hover{background:var(--lh1)}
+.dt td{padding:0 16px;font:400 14px 'IBM Plex Sans';color:var(--ts);vertical-align:middle;white-space:nowrap}
+.dt td.pri{color:var(--tp);font-weight:500}
+.dt td.mono{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--tp)}
+.ws-cell{display:flex;align-items:center;gap:12px}
+.ws-icon{width:24px;height:24px;background:var(--ip);display:flex;align-items:center;justify-content:center;font:700 11px 'IBM Plex Mono',monospace;color:#fff;flex-shrink:0;letter-spacing:.5px}
+.member-cell{display:flex;align-items:center;gap:12px}
+.member-av{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font:700 12px 'IBM Plex Mono',monospace;color:#fff;flex-shrink:0;letter-spacing:.5px}
+.sl{width:100%}
+.sl tr{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--bs0)}
+.sl-td{padding:12px 16px;font:400 14px 'IBM Plex Sans'}
+.sl-td:first-child{color:var(--ts)}
+.sl-td:last-child{color:var(--tp);font-weight:500}
+.settings-head{font:600 14px 'IBM Plex Sans';color:var(--tp);padding:12px 16px;border-bottom:1px solid var(--bs0);background:var(--l1);display:flex;align-items:center;justify-content:space-between}
+.c-tooltip{position:absolute;pointer-events:none;z-index:9999;opacity:0;transition:opacity .15s;background:#262626;border:1px solid #525252;padding:8px 12px;min-width:150px}
+.c-tt-title{font:400 11px 'IBM Plex Mono',monospace;color:#6f6f6f;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #393939}
+.c-tt-row{display:flex;align-items:center;gap:8px;padding:2px 0}
+.c-tt-sw{width:8px;height:8px;flex-shrink:0}
+.c-tt-lbl{color:#a8a8a8;flex:1;font-size:11px}
+.c-tt-val{font:500 12px 'IBM Plex Mono',monospace;color:#f4f4f4;text-align:right}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;gap:10px}
+.empty-icon{width:40px;height:40px;border:1px solid var(--bs1);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.empty-title{font:600 14px 'IBM Plex Sans';color:var(--ts)}
+.empty-sub{font:400 12px 'IBM Plex Sans';color:var(--td);max-width:240px}
+.mobile-bar{display:none;align-items:center;height:48px;background:var(--l1);border-bottom:1px solid var(--bs0);padding:0 16px;gap:12px;flex-shrink:0;position:sticky;top:0;z-index:100}
+.hamburger{width:32px;height:32px;background:none;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;flex-shrink:0}
+.hamburger span{display:block;width:18px;height:1.5px;background:var(--tp);border-radius:1px}
+.mobile-bar-title{font:600 14px 'IBM Plex Sans';color:var(--tp);flex:1}
+.mobile-bar-logo{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999}
+.nav-overlay.open{display:block}
+@media(max-width:1100px){.nav{width:220px}.g4{grid-template-columns:repeat(2,1fr)}.gchart{grid-template-columns:1fr}.search{width:150px}.sb-time{display:none}}
+@media(max-width:768px){
+  body{flex-direction:column;overflow:auto;height:auto}
+  html,body{height:auto;min-height:100vh}
+  .nav{position:fixed;top:0;left:-270px;width:260px;height:100vh;z-index:1000;transition:left .25s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 24px rgba(0,0,0,.5);flex-direction:column;overflow-y:auto}
+  .nav.open{left:0}
+  .mobile-bar{display:flex!important}
+  .main{height:auto;overflow:visible;flex:1}
+  .content{overflow:visible;padding:12px}
+  .statusbar{overflow-x:auto;scrollbar-width:none}
+  .statusbar::-webkit-scrollbar{display:none}
+  .header{height:auto;padding:12px 16px;flex-wrap:wrap;gap:8px}
+  .header-actions{width:100%}
+  .search{width:100%;flex:1}
+  .g4,.g3,.g2,.gchart{grid-template-columns:1fr}
+  .tile-hero .metric{font-size:36px}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .dt{min-width:580px}
+  .toolbar{height:auto;flex-direction:column;align-items:flex-start;gap:8px;padding:12px 16px}
+  .toolbar-actions{flex-wrap:wrap;gap:4px;width:100%}
+  .sparkline{display:none}
+}
+@media(max-width:480px){
+  .metric{font-size:28px}
+  .tile-hero .metric{font-size:32px}
+  .btn{font-size:12px;height:28px;padding:0 8px}
+  .content{padding:8px;gap:8px}
+  .page{gap:8px}
+}
+</style>
+</head>
+<body>
+
+<div class="mobile-bar" id="mobile-bar">
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  <div class="mobile-bar-logo"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.2" fill="#ffffff"/><ellipse cx="10" cy="10" rx="8.5" ry="3.5" stroke="#78a9ff" stroke-width="1.2" fill="none"/><ellipse cx="10" cy="10" rx="8.5" ry="3.5" stroke="#78a9ff" stroke-width="1.2" fill="none" transform="rotate(60 10 10)" opacity=".7"/><ellipse cx="10" cy="10" rx="8.5" ry="3.5" stroke="#78a9ff" stroke-width="1.2" fill="none" transform="rotate(-60 10 10)" opacity=".4"/></svg></div>
+  <span class="mobile-bar-title">Nucleus <span style="font-weight:400;color:var(--ts)">Analytics</span></span>
+  <button class="hbtn" style="margin-left:auto"><svg style="width:16px;height:16px;fill:var(--ts)" viewBox="0 0 32 32"><path d="M28.707 19.293 26 16.586V13a10.014 10.014 0 0 0-9-9.95V1h-2v2.05A10.014 10.014 0 0 0 6 13v3.586l-2.707 2.707A1 1 0 0 0 4 21h7a5 5 0 0 0 10 0h7a1 1 0 0 0 .707-1.707zM16 24a3 3 0 0 1-3-3h6a3 3 0 0 1-3 3z"/></svg><div class="notif-dot"></div></button>
+</div>
+<div class="nav-overlay" id="nav-overlay"></div>
+
+<nav class="nav" id="sidenav">
+  <div class="nav-head"><div class="nav-logo"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.2" fill="#ffffff"/><ellipse cx="10" cy="10" rx="8.5" ry="3.5" stroke="#78a9ff" stroke-width="1.2" fill="none"/><ellipse cx="10" cy="10" rx="8.5" ry="3.5" stroke="#78a9ff" stroke-width="1.2" fill="none" transform="rotate(60 10 10)" opacity=".7"/><ellipse cx="10" cy="10" rx="8.5" ry="3.5" stroke="#78a9ff" stroke-width="1.2" fill="none" transform="rotate(-60 10 10)" opacity=".4"/></svg></div><span class="nav-name">Nucleus <em>Analytics</em></span></div>
+  <div class="nav-items">
+    <div class="nav-section">Platform</div>
+    <button class="nav-link active" data-page="overview"><svg class="nav-icon" viewBox="0 0 32 32"><path d="M12 4H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM4 14V6h8v8zM28 4h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm-8 10V6h8v8zM12 18H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-8 10v-8h8v8zM28 18h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-8 10v-8h8v8z"/></svg><span class="nav-link-text">Overview</span></button>
+    <button class="nav-link" data-page="customers"><svg class="nav-icon" viewBox="0 0 32 32"><path d="M16 4a5 5 0 1 1-5 5 5 5 0 0 1 5-5m0-2a7 7 0 1 0 7 7A7 7 0 0 0 16 2zM26 30h-2v-5a5 5 0 0 0-5-5h-6a5 5 0 0 0-5 5v5H6v-5a7 7 0 0 1 7-7h6a7 7 0 0 1 7 7z"/></svg><span class="nav-link-text">Customers</span><span class="nav-badge">3</span></button>
+    <button class="nav-link" data-page="revenue"><svg class="nav-icon" viewBox="0 0 32 32"><path d="M16 2C8.3 2 2 8.3 2 16s6.3 14 14 14 14-6.3 14-14S23.7 2 16 2zm0 26C9.4 28 4 22.6 4 16S9.4 4 16 4s12 5.4 12 12-5.4 12-12 12z"/><path d="M19 15h-4v-2h4a1 1 0 0 0 0-2h-2v-2h-2v2h-2v2h2v2h-2v2h2v2h-2v2h2v2h2v-2h2a3 3 0 0 0 0-6z"/></svg><span class="nav-link-text">Revenue</span></button>
+    <button class="nav-link" data-page="analytics"><svg class="nav-icon" viewBox="0 0 32 32"><path d="M27 28V6h-8v22h-4V14H7v14H4v2h26v-2zM9 16h4v12H9zm10-8h4v20h-4z"/></svg><span class="nav-link-text">Analytics</span></button>
+    <button class="nav-link" data-page="team"><svg class="nav-icon" viewBox="0 0 32 32"><path d="M16 4a5 5 0 1 1-5 5 5 5 0 0 1 5-5m0-2a7 7 0 1 0 7 7A7 7 0 0 0 16 2zm12 26h-2v-5a5 5 0 0 0-5-5h-1v-2h1a7 7 0 0 1 7 7zM6 26H4a7 7 0 0 1 7-7h1v2H11a5 5 0 0 0-5 5zm10 4h-2v-5a5 5 0 0 0-5-5H7v-2h2a7 7 0 0 1 7 7z"/></svg><span class="nav-link-text">Team</span></button>
+    <button class="nav-link" data-page="settings"><svg class="nav-icon" viewBox="0 0 32 32"><path d="M27 16.76v-1.53l1.92-1.68A2 2 0 0 0 29.3 11l-2.36-4a2 2 0 0 0-2.37-.9l-2.43.82a11.35 11.35 0 0 0-1.31-.75l-.51-2.52a2 2 0 0 0-2-1.61h-4.68a2 2 0 0 0-2 1.61l-.51 2.52a11.48 11.48 0 0 0-1.32.75l-2.38-.86A2 2 0 0 0 4.43 7L2.7 11a2 2 0 0 0 .41 2.51L5 15.24v1.53l-1.89 1.68A2 2 0 0 0 2.7 21l2.36 4a2 2 0 0 0 2.37.9l2.43-.82a11.35 11.35 0 0 0 1.31.75l.51 2.52a2 2 0 0 0 2 1.61h4.72a2 2 0 0 0 2-1.61l.51-2.52a11.48 11.48 0 0 0 1.32-.75l2.42.82a2 2 0 0 0 2.37-.9l2.28-4a2 2 0 0 0-.41-2.51zM16 11a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3z"/></svg><span class="nav-link-text">Settings</span></button>
+  </div>
+  <div class="nav-footer"><div class="avatar">JM</div><div><div style="font:500 14px 'IBM Plex Sans';color:var(--tp)">Jordan Mercer</div><div style="font:400 12px 'IBM Plex Sans';color:var(--ts)">Administrator</div></div></div>
+</nav>
+
+<main class="main">
+  <div class="statusbar">
+    <span class="sb-label">System Status</span>
+    <div class="sb-item"><div class="dot" style="background:var(--ss)"></div><span>API</span></div>
+    <div class="sb-item"><div class="dot" style="background:var(--ss)"></div><span>Database</span></div>
+    <div class="sb-item warn"><div class="dot dot-pulse" style="background:var(--sw)"></div><span>Auth</span></div>
+    <div class="sb-item"><div class="dot" style="background:var(--ss)"></div><span>Storage</span></div>
+    <div class="sb-warning"><svg style="width:14px;height:14px;fill:var(--sw);flex-shrink:0" viewBox="0 0 32 32"><path d="M16 2a14 14 0 1 0 14 14A14 14 0 0 0 16 2zm-1 6h2v11h-2zm1 16a1.5 1.5 0 1 1 1.5-1.5A1.5 1.5 0 0 1 16 24z"/></svg>Auth latency elevated - 340 ms avg</div>
+    <span class="sb-time">Updated 42s ago</span>
+  </div>
+  <div class="header">
+    <div class="header-info"><h1 id="page-title">Overview</h1><p id="page-sub">March 2026 - All workspaces</p></div>
+    <div class="header-actions">
+      <div class="search"><svg style="width:14px;height:14px;fill:var(--tph);flex-shrink:0" viewBox="0 0 32 32"><path d="M29 27.59 22.45 21A11 11 0 1 0 21 22.45L27.59 29zM13 22a9 9 0 1 1 9-9 9 9 0 0 1-9 9z"/></svg><span>Search...</span><span style="margin-left:auto;font:400 11px 'IBM Plex Mono',monospace;color:var(--tph);background:var(--l3);padding:1px 4px">Cmd K</span></div>
+      <button class="hbtn"><svg style="width:16px;height:16px;fill:var(--ts)" viewBox="0 0 32 32"><path d="M28.707 19.293 26 16.586V13a10.014 10.014 0 0 0-9-9.95V1h-2v2.05A10.014 10.014 0 0 0 6 13v3.586l-2.707 2.707A1 1 0 0 0 4 21h7a5 5 0 0 0 10 0h7a1 1 0 0 0 .707-1.707zM16 24a3 3 0 0 1-3-3h6a3 3 0 0 1-3 3z"/></svg><div class="notif-dot"></div></button>
+      <div class="overflow"><button class="overflow-trigger" id="user-menu-btn"><div class="avatar" style="width:24px;height:24px;font-size:10px">JM</div><svg style="width:12px;height:12px;fill:var(--ts)" viewBox="0 0 32 32"><path d="M16 22 6 12l1.4-1.4 8.6 8.6 8.6-8.6L26 12z"/></svg></button>
+      <div class="overflow-panel" id="umenu"><div class="overflow-opt">Profile settings</div><div class="overflow-opt">Billing</div><div class="overflow-opt">Team management</div><div class="overflow-div"></div><div class="overflow-opt danger">Sign out</div></div></div>
+    </div>
+  </div>
+  <div class="content">
+
+    <div class="page" id="page-overview">
+      <div class="g4">
+        <div class="tile tile-hero"><svg class="sparkline" viewBox="0 0 110 54" preserveAspectRatio="none"><polyline points="0,46 16,40 32,34 48,38 64,26 80,18 96,12 110,4" fill="none" stroke="#78a9ff" stroke-width="2" stroke-linejoin="round"/><polygon points="0,46 16,40 32,34 48,38 64,26 80,18 96,12 110,4 110,54 0,54" fill="rgba(120,169,255,0.15)"/></svg><div class="eyebrow">MRR - Monthly Recurring Revenue</div><div class="metric">$58,400</div><div class="delta" style="color:var(--ss)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 4 12 12H4z"/></svg>+$6,284 +12.1%</div><div class="detail">$41,400 recurring - $17,000 expansion</div></div>
+        <div class="tile"><svg class="sparkline" viewBox="0 0 80 44" preserveAspectRatio="none"><polyline points="0,36 12,32 24,28 36,26 48,20 60,16 72,12 80,8" fill="none" stroke="#42be65" stroke-width="1.5" stroke-linejoin="round"/><polygon points="0,36 12,32 24,28 36,26 48,20 60,16 72,12 80,8 80,44 0,44" fill="rgba(66,190,101,0.12)"/></svg><div class="eyebrow">Active Workspaces</div><div class="metric">1,284</div><div class="delta" style="color:var(--ss)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 4 12 12H4z"/></svg>+98 this month +8.3%</div><div class="detail">1,189 paid - 95 trial</div></div>
+        <div class="tile"><svg class="sparkline" viewBox="0 0 80 44" preserveAspectRatio="none"><polyline points="0,8 12,12 24,10 36,16 48,22 60,28 72,32 80,36" fill="none" stroke="#42be65" stroke-width="1.5" stroke-linejoin="round"/><polygon points="0,8 12,12 24,10 36,16 48,22 60,28 72,32 80,36 80,44 0,44" fill="rgba(66,190,101,0.12)"/></svg><div class="eyebrow">Churn Rate</div><div class="metric">3.1%</div><div class="delta" style="color:var(--ss)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 4 12 12H4z"/></svg>-0.4 pp improving</div><div class="detail">16 churned - $4,320 lost MRR</div></div>
+        <div class="tile"><svg class="sparkline" viewBox="0 0 80 44" preserveAspectRatio="none"><polyline points="0,32 12,30 24,26 36,24 48,20 60,16 72,12 80,8" fill="none" stroke="#78a9ff" stroke-width="1.5" stroke-linejoin="round"/><polygon points="0,32 12,30 24,26 36,24 48,20 60,16 72,12 80,8 80,44 0,44" fill="rgba(120,169,255,0.1)"/></svg><div class="eyebrow">Net Revenue Retention</div><div class="metric">114%</div><div class="delta" style="color:var(--ss)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 4 12 12H4z"/></svg>+2 pp +1.8% MoM</div><div class="detail">Expansion outpacing churn</div></div>
+      </div>
+      <div class="gchart">
+        <div class="chart-tile"><div class="chart-title">Revenue growth</div><div class="chart-sub">MRR and expansion - last 8 months</div><div class="chart-legend"><div class="legend-item"><div class="legend-sw" style="background:#78a9ff"></div>MRR</div><div class="legend-item"><div class="legend-sw" style="background:#42be65"></div>Expansion</div></div><div style="position:relative;height:200px"><canvas id="mrrChart"></canvas></div></div>
+        <div class="chart-tile"><div class="chart-title">Workspaces by plan</div><div class="chart-sub" style="margin-bottom:12px">Ranked distribution</div><div style="position:relative;height:200px"><canvas id="planChart"></canvas></div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="toolbar"><div><div class="toolbar-title">Workspaces</div><div class="toolbar-sub">Click headers to sort</div></div><div class="toolbar-actions"><button class="btn btn-ghost active" data-filter="all">All</button><button class="btn btn-ghost" data-filter="at-risk">At risk</button><button class="btn btn-ghost" data-filter="trial">Trial</button><button class="btn btn-primary" style="margin-left:1px">+ Add workspace</button></div></div>
+        <table class="dt"><thead><tr><th data-col="name">Workspace <i class="sort-icon">&#8597;</i></th><th data-col="plan">Plan <i class="sort-icon">&#8597;</i></th><th data-col="seats">Seats <i class="sort-icon">&#8597;</i></th><th data-col="mrr">MRR <i class="sort-icon">&#8597;</i></th><th>Status</th><th data-col="joined">Member since <i class="sort-icon">&#8597;</i></th></tr></thead><tbody id="ws-tbody"></tbody></table>
+      </div>
+    </div>
+
+    <div class="page hidden" id="page-customers">
+      <div class="g3"><div class="tile tile-hero"><div class="eyebrow">Total Customers</div><div class="metric">1,284</div><div class="delta" style="color:var(--ss)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 4 12 12H4z"/></svg>+98 this month</div><div class="detail">Across all subscription tiers</div></div><div class="tile"><div class="eyebrow">At-Risk Accounts</div><div class="metric">47</div><div class="delta" style="color:var(--sw)">Needs immediate attention</div><div class="detail">Down 3 from last week</div></div><div class="tile"><div class="eyebrow">Avg Contract Value</div><div class="metric">$3,420</div><div class="delta" style="color:var(--ss)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 4 12 12H4z"/></svg>+$210 vs last month</div><div class="detail">Blended across all plans</div></div></div>
+      <div class="table-wrap"><div class="toolbar"><div><div class="toolbar-title">All Customers</div><div class="toolbar-sub">Full account roster</div></div><div class="toolbar-actions"><button class="btn btn-outline">+ New customer</button></div></div><table class="dt"><thead><tr><th>Workspace</th><th>Plan</th><th>Seats</th><th>MRR</th><th>Status</th><th>Member since</th></tr></thead><tbody id="cust-tbody"></tbody></table></div>
+    </div>
+
+    <div class="page hidden" id="page-revenue">
+      <div class="g4"><div class="tile tile-hero"><div class="eyebrow">MRR</div><div class="metric">$58,400</div><div class="delta" style="color:var(--ss)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 4 12 12H4z"/></svg>+12.1% MoM</div><div class="detail">Up from $52,116 last month</div></div><div class="tile"><div class="eyebrow">ARR Run Rate</div><div class="metric">$700,800</div><div class="delta" style="color:var(--lp)">Annualised projection</div><div class="detail">Based on current MRR x 12</div></div><div class="tile"><div class="eyebrow">New MRR</div><div class="metric">$13,400</div><div class="delta" style="color:var(--ss)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 4 12 12H4z"/></svg>+18% MoM</div><div class="detail">From 98 new workspaces</div></div><div class="tile"><div class="eyebrow">Churned MRR</div><div class="metric">$1,900</div><div class="delta" style="color:var(--sw)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 28-12-12h24z"/></svg>down from $2,200</div><div class="detail">16 accounts - 3.1% churn rate</div></div></div>
+      <div class="chart-tile"><div class="chart-title">Revenue waterfall</div><div class="chart-sub">New MRR, expansion, and churn - last 6 months</div><div class="chart-legend"><div class="legend-item"><div class="legend-sw" style="background:#78a9ff"></div>New MRR</div><div class="legend-item"><div class="legend-sw" style="background:#42be65"></div>Expansion</div><div class="legend-item"><div class="legend-sw" style="background:#f1c21b"></div>Churn</div></div><div style="position:relative;height:240px"><canvas id="waterfallChart"></canvas></div></div>
+    </div>
+
+    <div class="page hidden" id="page-analytics">
+      <div class="g3"><div class="tile tile-hero"><div class="eyebrow">Weekly Visits</div><div class="metric">7,200</div><div class="delta" style="color:var(--ss)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 4 12 12H4z"/></svg>+24% vs prior week</div><div class="detail">5,806 unique - 1,394 returning</div></div><div class="tile"><div class="eyebrow">Weekly Signups</div><div class="metric">440</div><div class="delta" style="color:var(--ss)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 4 12 12H4z"/></svg>+22% vs prior week</div><div class="detail">316 organic - 124 paid</div></div><div class="tile"><div class="eyebrow">Conversion Rate</div><div class="metric">17.3%</div><div class="delta" style="color:var(--ss)"><svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 32 32"><path d="m16 4 12 12H4z"/></svg>+1.2 pp vs prior week</div><div class="detail">Signup to paid within 14 days</div></div></div>
+      <div class="chart-tile"><div class="chart-title">Traffic and signups</div><div class="chart-sub">Weekly visits, signups, and conversions - last 8 weeks</div><div class="chart-legend"><div class="legend-item"><div class="legend-sw" style="background:#78a9ff"></div>Visits</div><div class="legend-item"><div class="legend-sw" style="background:#42be65"></div>Signups</div><div class="legend-item"><div class="legend-sw" style="background:#f1c21b"></div>Conversions</div></div><div style="position:relative;height:220px"><canvas id="analyticsChart"></canvas></div></div>
+    </div>
+
+    <div class="page hidden" id="page-team">
+      <div class="g3"><div class="tile tile-hero"><div class="eyebrow">Total Members</div><div class="metric">6</div><div class="delta" style="color:var(--ts)">2 admins - 2 editors - 2 viewers</div><div class="detail">All seats occupied</div></div><div class="tile"><div class="eyebrow">Active Now</div><div class="metric">3</div><div class="delta" style="color:var(--ss)">Online in the last 30 min</div><div class="detail">Priya - Jordan - Sam</div></div><div class="tile"><div class="eyebrow">Pending Invites</div><div class="metric">1</div><div class="delta" style="color:var(--sw)">Awaiting acceptance</div><div class="detail">Sent to Chloe Dubois</div></div></div>
+      <div class="table-wrap"><div class="toolbar"><div><div class="toolbar-title">Team Members</div><div class="toolbar-sub">Manage roles and access</div></div><div class="toolbar-actions"><button class="btn btn-outline">+ Invite member</button></div></div>
+      <table class="dt"><thead><tr><th>Member</th><th>Role</th><th>Email</th><th>Status</th><th>Last active</th></tr></thead><tbody>
+        <tr><td class="pri"><div class="member-cell"><div class="member-av" style="background:#6929c4">PN</div>Priya Nair</div></td><td><span class="tag tag-purple">Admin</span></td><td><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ts)">priya@nucleus.io</span></td><td><span class="tag tag-green">Active</span></td><td>Just now</td></tr>
+        <tr><td class="pri"><div class="member-cell"><div class="member-av" style="background:#0f62fe">JM</div>Jordan Mercer</div></td><td><span class="tag tag-purple">Admin</span></td><td><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ts)">jordan@nucleus.io</span></td><td><span class="tag tag-green">Active</span></td><td>5m ago</td></tr>
+        <tr><td class="pri"><div class="member-cell"><div class="member-av" style="background:#005d5d">LF</div>Leo Fontaine</div></td><td><span class="tag tag-blue">Editor</span></td><td><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ts)">leo@nucleus.io</span></td><td><span class="tag tag-green">Active</span></td><td>1h ago</td></tr>
+        <tr><td class="pri"><div class="member-cell"><div class="member-av" style="background:#9f1853">YT</div>Yuki Tanaka</div></td><td><span class="tag tag-teal">Viewer</span></td><td><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ts)">yuki@nucleus.io</span></td><td><span class="tag tag-gray">Inactive</span></td><td>3d ago</td></tr>
+        <tr><td class="pri"><div class="member-cell"><div class="member-av" style="background:#198038">SO</div>Sam Okoye</div></td><td><span class="tag tag-blue">Editor</span></td><td><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ts)">sam@nucleus.io</span></td><td><span class="tag tag-green">Active</span></td><td>2h ago</td></tr>
+        <tr><td class="pri"><div class="member-cell"><div class="member-av" style="background:#8a3800">CD</div>Chloe Dubois</div></td><td><span class="tag tag-teal">Viewer</span></td><td><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ts)">chloe@nucleus.io</span></td><td><span class="tag tag-yellow">Pending</span></td><td>Invited</td></tr>
+      </tbody></table></div>
+    </div>
+
+    <div class="page hidden" id="page-settings">
+      <div class="g2">
+        <div class="table-wrap"><div class="settings-head">Workspace <button class="btn btn-ghost" style="height:28px;font-size:12px">Edit</button></div><table class="sl"><tbody><tr><td class="sl-td">Name</td><td class="sl-td">Nucleus HQ</td></tr><tr><td class="sl-td">Slug</td><td class="sl-td" style="font-family:'IBM Plex Mono',monospace;font-size:13px">nucleus-hq</td></tr><tr><td class="sl-td">Plan</td><td class="sl-td"><span class="tag tag-purple">Enterprise</span></td></tr><tr><td class="sl-td">Region</td><td class="sl-td" style="font-family:'IBM Plex Mono',monospace;font-size:13px">us-east-1</td></tr></tbody></table></div>
+        <div class="table-wrap"><div class="settings-head">Billing <button class="btn btn-ghost" style="height:28px;font-size:12px">Edit</button></div><table class="sl"><tbody><tr><td class="sl-td">Billing email</td><td class="sl-td"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ts)">billing@nucleus.io</span></td></tr><tr><td class="sl-td">Next invoice</td><td class="sl-td">Apr 1, 2026</td></tr><tr><td class="sl-td">Amount</td><td class="sl-td" style="font-family:'IBM Plex Mono',monospace;font-size:13px">$58,400 / mo</td></tr><tr><td class="sl-td">Payment</td><td class="sl-td" style="font-family:'IBM Plex Mono',monospace;font-size:13px">Visa 4821</td></tr></tbody></table></div>
+        <div class="table-wrap"><div class="settings-head">Security <button class="btn btn-ghost" style="height:28px;font-size:12px">Edit</button></div><table class="sl"><tbody><tr><td class="sl-td">Two-factor auth</td><td class="sl-td"><span class="tag tag-green">Enabled</span></td></tr><tr><td class="sl-td">SSO provider</td><td class="sl-td">Google Workspace</td></tr><tr><td class="sl-td">Session timeout</td><td class="sl-td" style="font-family:'IBM Plex Mono',monospace;font-size:13px">8 hours</td></tr><tr><td class="sl-td">IP allowlist</td><td class="sl-td"><span class="tag tag-gray">Disabled</span></td></tr></tbody></table></div>
+        <div class="table-wrap"><div class="settings-head">Notifications <button class="btn btn-ghost" style="height:28px;font-size:12px">Edit</button></div><table class="sl"><tbody><tr><td class="sl-td">Churn alerts</td><td class="sl-td">Email + Slack</td></tr><tr><td class="sl-td">New signups</td><td class="sl-td">Email only</td></tr><tr><td class="sl-td">System alerts</td><td class="sl-td">Slack only</td></tr><tr><td class="sl-td">Weekly digest</td><td class="sl-td">Email</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+(function() {
+  var WS = [
+    {name:"Acme Corp",     plan:"Enterprise", seats:84,  mrr:12600, status:"healthy", joined:"Jan 2024"},
+    {name:"Meridian Labs", plan:"Growth",     seats:32,  mrr:3840,  status:"healthy", joined:"Mar 2024"},
+    {name:"Foxhill Studio",plan:"Starter",    seats:8,   mrr:720,   status:"at-risk", joined:"Nov 2023"},
+    {name:"Orion Systems", plan:"Enterprise", seats:120, mrr:18000, status:"healthy", joined:"Aug 2023"},
+    {name:"Pale Blue Dot", plan:"Growth",     seats:19,  mrr:2280,  status:"churned", joined:"Feb 2024"},
+    {name:"Vertex AI Labs",plan:"Starter",    seats:5,   mrr:450,   status:"trial",   joined:"Mar 2024"}
+  ];
+  var STAG = {
+    healthy:  {cls:"tag-green",  lbl:"Healthy"},
+    "at-risk":{cls:"tag-yellow", lbl:"At risk"},
+    churned:  {cls:"tag-red",    lbl:"Churned"},
+    trial:    {cls:"tag-blue",   lbl:"Trial"}
+  };
+  var PMETA = {
+    overview: {t:"Overview",   s:"March 2026 - All workspaces"},
+    customers:{t:"Customers",  s:"Manage and monitor accounts"},
+    revenue:  {t:"Revenue",    s:"MRR, ARR, and revenue breakdown"},
+    analytics:{t:"Analytics",  s:"Traffic, signups, and funnel metrics"},
+    team:     {t:"Team",       s:"Members, roles, and permissions"},
+    settings: {t:"Settings",   s:"Workspace and billing configuration"}
+  };
+
+  var sortCol="name", sortDir=1, activeFilter="all", curPage="overview";
+
+  function wsRow(w) {
+    var s = STAG[w.status];
+    return "<tr>"
+      +"<td class='pri'><div class='ws-cell'><div class='ws-icon'>"+w.name[0]+"</div>"+w.name+"</div></td>"
+      +"<td>"+w.plan+"</td>"
+      +"<td class='mono'>"+w.seats+"</td>"
+      +"<td class='mono'>$"+w.mrr.toLocaleString()+"</td>"
+      +"<td><span class='tag "+s.cls+"'>"+s.lbl+"</span></td>"
+      +"<td>"+w.joined+"</td>"
+      +"</tr>";
+  }
+
+  function renderTable() {
+    var data = activeFilter==="all" ? WS.slice() : WS.filter(function(w){return w.status===activeFilter;});
+    data.sort(function(a,b){
+      var av=a[sortCol], bv=b[sortCol];
+      return typeof av==="number" ? (av-bv)*sortDir : (av>bv?1:-1)*sortDir;
+    });
+    var wt = document.getElementById("ws-tbody");
+    var ct = document.getElementById("cust-tbody");
+    if(data.length===0) {
+      wt.innerHTML = "<tr><td colspan='6'><div class='empty-state'>"
+        +"<div class='empty-icon'><svg width='20' height='20' viewBox='0 0 32 32' fill='var(--tph)'><path d='M11 24H4v-2h7zm7-4H4v-2h14zm5-4H4v-2h19zm0-4H4v-2h19zm0-4H4V6h19z'/></svg></div>"
+        +"<div class='empty-title'>No workspaces found</div>"
+        +"<div class='empty-sub'>No accounts match this filter. Try switching to All.</div>"
+        +"</div></td></tr>";
+    } else {
+      wt.innerHTML = data.map(wsRow).join("");
+    }
+    if(ct) ct.innerHTML = WS.map(wsRow).join("");
+  }
+
+  function closeNav() {
+    var nav=document.getElementById("sidenav");
+    var ov=document.getElementById("nav-overlay");
+    if(nav) nav.classList.remove("open");
+    if(ov) ov.classList.remove("open");
+  }
+
+  function checkMobile() {
+    var mb=document.getElementById("mobile-bar");
+    if(!mb) return;
+    mb.style.display = window.innerWidth<=768 ? "flex" : "none";
+    if(window.innerWidth>768) closeNav();
+  }
+
+  function mkTooltip(context) {
+    var chart=context.chart, tooltip=context.tooltip;
+    var el=chart.canvas.parentNode.querySelector(".c-tooltip");
+    if(!el){el=document.createElement("div");el.className="c-tooltip";chart.canvas.parentNode.appendChild(el);}
+    if(tooltip.opacity===0){el.style.opacity="0";return;}
+    var title=(tooltip.title||[""])[0];
+    var rows=(tooltip.dataPoints||[]).map(function(dp){
+      var color=dp.dataset.borderColor||dp.dataset.backgroundColor||"#78a9ff";
+      var val=typeof dp.raw==="number"?"$"+Math.abs(dp.raw).toLocaleString():dp.formattedValue;
+      return "<div class='c-tt-row'><div class='c-tt-sw' style='background:"+color+"'></div><span class='c-tt-lbl'>"+dp.dataset.label+"</span><span class='c-tt-val'>"+val+"</span></div>";
+    }).join("");
+    el.innerHTML="<div class='c-tt-title'>"+title+"</div>"+rows;
+    var x=tooltip.caretX, w=164;
+    el.style.left=(x+w>chart.chartArea.right?x-w-8:x+12)+"px";
+    el.style.top=Math.max(0,tooltip.caretY-20)+"px";
+    el.style.opacity="1";
+  }
+
+  function mkChart(id,config) {
+    var el=document.getElementById(id);
+    if(!el) return;
+    config.options=config.options||{};
+    config.options.responsive=true;
+    config.options.maintainAspectRatio=false;
+    config.options.interaction={mode:"index",intersect:false};
+    config.options.plugins=config.options.plugins||{};
+    config.options.plugins.tooltip={enabled:false,external:mkTooltip};
+    config.options.plugins.legend={display:false};
+    if(config.type==="line"){
+      config.data.datasets.forEach(function(ds){
+        ds.pointRadius=0;ds.pointHoverRadius=5;
+        ds.pointHoverBackgroundColor=ds.borderColor;
+        ds.pointHoverBorderColor="#161616";ds.pointHoverBorderWidth=2;
+      });
+    }
+    var c=new Chart(el,config);
+    el._ch=c;
+    return c;
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+
+    // Nav links
+    document.querySelectorAll(".nav-link").forEach(function(btn) {
+      btn.addEventListener("click", function(e) {
+        var page=e.currentTarget.dataset.page;
+        if(!page||page===curPage) return;
+        document.querySelectorAll(".nav-link").forEach(function(b){b.classList.remove("active");});
+        e.currentTarget.classList.add("active");
+        document.getElementById("page-title").textContent=PMETA[page].t;
+        document.getElementById("page-sub").textContent=PMETA[page].s;
+        document.getElementById("page-"+curPage).classList.add("hidden");
+        document.getElementById("page-"+page).classList.remove("hidden");
+        curPage=page;
+        requestAnimationFrame(function(){
+          document.querySelectorAll("#page-"+page+" canvas").forEach(function(c){if(c._ch)c._ch.resize();});
+        });
+        closeNav();
+      });
+    });
+
+    // Hamburger
+    document.getElementById("hamburger").addEventListener("click", function() {
+      var nav=document.getElementById("sidenav");
+      var ov=document.getElementById("nav-overlay");
+      nav.classList.toggle("open");
+      ov.classList.toggle("open");
+    });
+
+    // Overlay closes nav
+    document.getElementById("nav-overlay").addEventListener("click", closeNav);
+
+    // User menu
+    document.getElementById("user-menu-btn").addEventListener("click", function(e) {
+      e.stopPropagation();
+      document.getElementById("umenu").classList.toggle("open");
+    });
+    document.addEventListener("click", function(e) {
+      if(!e.target.closest(".overflow")) document.getElementById("umenu").classList.remove("open");
+    });
+
+    // Filter buttons
+    document.querySelectorAll("[data-filter]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        activeFilter=btn.dataset.filter;
+        document.querySelectorAll("[data-filter]").forEach(function(b){b.classList.remove("active");});
+        btn.classList.add("active");
+        renderTable();
+      });
+    });
+
+    // Sort headers
+    document.querySelectorAll(".dt th[data-col]").forEach(function(th) {
+      th.addEventListener("click", function() {
+        var col=th.dataset.col;
+        if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=1;}
+        document.querySelectorAll(".dt th").forEach(function(h){
+          h.classList.remove("sorted");
+          var i=h.querySelector(".sort-icon");
+          if(i) i.textContent="\u2195";
+        });
+        th.classList.add("sorted");
+        var icon=th.querySelector(".sort-icon");
+        if(icon) icon.textContent=sortDir===1?"\u2191":"\u2193";
+        renderTable();
+      });
+    });
+
+    renderTable();
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    // Charts
+    Chart.defaults.color="#8d8d8d";
+    Chart.defaults.font.family="'IBM Plex Sans',sans-serif";
+    Chart.defaults.font.size=11;
+    var grid={color:"rgba(255,255,255,0.06)",drawBorder:false};
+    var axis={grid:grid,ticks:{color:"#8d8d8d"},border:{display:false}};
+    var axisK={grid:grid,ticks:{color:"#8d8d8d",callback:function(v){return"$"+(v/1000).toFixed(0)+"k";}},border:{display:false}};
+
+    mkChart("mrrChart",{type:"line",data:{labels:["Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"],datasets:[{label:"MRR",data:[38200,41500,44800,43200,47600,51200,53800,58400],borderColor:"#78a9ff",borderWidth:1.5,backgroundColor:"rgba(120,169,255,0.1)",fill:true,tension:.4},{label:"Expansion",data:[4100,5200,4800,3900,6200,7100,6800,8400],borderColor:"#42be65",borderWidth:1.5,backgroundColor:"rgba(66,190,101,0.1)",fill:true,tension:.4}]},options:{scales:{x:axis,y:axisK}}});
+    mkChart("planChart",{type:"bar",data:{labels:["Enterprise","Growth","Starter","Trial"],datasets:[{label:"Workspaces",data:[38,94,187,52],backgroundColor:"#78a9ff",borderSkipped:"left"}]},options:{indexAxis:"y",scales:{x:axis,y:{grid:grid,ticks:{color:"#c6c6c6"},border:{display:false}}}}});
+    mkChart("waterfallChart",{type:"bar",data:{labels:["Oct","Nov","Dec","Jan","Feb","Mar"],datasets:[{label:"New MRR",data:[8200,7900,9400,10200,11600,13400],backgroundColor:"#78a9ff"},{label:"Expansion",data:[4800,3900,6200,7100,6800,8400],backgroundColor:"#42be65"},{label:"Churn",data:[-2100,-2800,-1700,-2200,-1600,-1900],backgroundColor:"#f1c21b"}]},options:{scales:{x:axis,y:axisK}}});
+    mkChart("analyticsChart",{type:"line",data:{labels:["W1","W2","W3","W4","W5","W6","W7","W8"],datasets:[{label:"Visits",data:[3200,4100,3800,5200,4700,6100,5800,7200],borderColor:"#78a9ff",borderWidth:1.5,tension:.4,fill:false},{label:"Signups",data:[180,220,195,310,270,390,360,440],borderColor:"#42be65",borderWidth:1.5,tension:.4,fill:false},{label:"Conversions",data:[44,61,52,88,74,105,98,124],borderColor:"#f1c21b",borderWidth:1.5,tension:.4,fill:false}]},options:{scales:{x:axis,y:axis}}});
+
+    setTimeout(function(){
+      document.querySelectorAll("canvas").forEach(function(c){if(c._ch)c._ch.resize();});
+    },100);
+  });
+
+})();
+</script>
+</body>
+</html>
